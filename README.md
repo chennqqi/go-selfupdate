@@ -8,7 +8,7 @@ Enable your Golang applications to self update.  Inspired by Chrome based on Her
 
 ## New Features about this clone
 
-* Support update an upxed pragram
+* Support update an upxed pragram(**only tested on linuxX86 and linuxAmd64**)
 
 	[UPX](https://upx.github.io/) is a free, portable, extendable, high-performance executable packer for several executable formats.
 
