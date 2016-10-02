@@ -29,6 +29,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"crypto/sha256"
+	"debug/elf"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -126,11 +127,24 @@ func (u *Updater) wantUpdate() bool {
 	return writeTime(path, time.Now().Add(wait))
 }
 
-func (u *Updater) update() error {
+func getExcutable() (string, error) {
 	path, err := osext.Executable()
+	if os.IsNotExist(err) && runtime.GOOS == "linux" {
+		if upxed, err := elfIsUpxed(os.Args[0]); upxed {
+			path, err = os.Getenv("   ") //three space
+		}
+	} else if err != nil {
+		return err
+	}
+	return path, err
+}
+
+func (u *Updater) update() error {
+	path, err := getExcutable()
 	if err != nil {
 		return err
 	}
+
 	old, err := os.Open(path)
 	if err != nil {
 		return err
@@ -292,4 +306,51 @@ func verifySha(bin []byte, sha []byte) bool {
 
 func writeTime(path string, t time.Time) bool {
 	return ioutil.WriteFile(path, []byte(t.Format(time.RFC3339)), 0644) == nil
+}
+
+func elfIsUpxed(appName string) (bool, error) {
+	f, err := os.Open(appName)
+	if err != nil {
+		return false, err
+	}
+
+	defer f.Close()
+	_elf, err := elf.NewFile(f)
+
+	// Read and decode ELF identifier
+	var ident [16]uint8
+	f.ReadAt(ident[0:], 0)
+
+	if ident[0] != '\x7f' || ident[1] != 'E' || ident[2] != 'L' || ident[3] != 'F' {
+		return false, fmt.Errorf("Bad magic number at %d\n", ident[0:4])
+	}
+
+	var arch string
+	switch _elf.Class.String() {
+	case "ELFCLASS64":
+		var hdr elf.Header64
+		f.Seek(0, os.SEEK_SET)
+		if err := binary.Read(f, _elf.ByteOrder, hdr); err != nil {
+			return false, err
+		}
+		_elf.Progs[0].Flags.String()
+		f.Seek(int64(hdr.Phoff)+int64(hdr.Phentsize)*int64(hdr.Phnum), os.SEEK_SET)
+
+	case "ELFCLASS32":
+		var hdr elf.Header32
+		f.Seek(0, os.SEEK_SET)
+		if err := binary.Read(f, _elf.ByteOrder, hdr); err != nil {
+			return false, err
+		}
+		f.Seek(int64(hdr.Phoff)+int64(hdr.Phentsize)*int64(hdr.Phnum), os.SEEK_SET)
+
+	default:
+		return false, fmt.Errorf("unsupport class", _elf.Class.String())
+	}
+	var upxMagic [8]byte
+	if _, err := f.Read(upxMagic[0:]); err != nil {
+		return false, err
+	}
+
+	return string(upxMagic[4:]) == "UPX!", nil
 }
