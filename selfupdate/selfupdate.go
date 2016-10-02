@@ -43,9 +43,9 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/kardianos/osext"
+	"github.com/chennqqi/osext"
 	"github.com/kr/binarydist"
-	"gopkg.in/inconshreveable/go-update.v0"
+	"gopkg.in/chennqqi/go-update"
 )
 
 const (
