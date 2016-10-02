@@ -29,8 +29,6 @@ import (
 	"bytes"
 	"compress/gzip"
 	"crypto/sha256"
-	"debug/elf"
-	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -92,6 +90,12 @@ type Updater struct {
 	}
 }
 
+func (u *Updater) getExecRelativeDir(dir string) string {
+	filename, _ := osext.Executable()
+	path := filepath.Join(filepath.Dir(filename), dir)
+	return path
+}
+
 // BackgroundRun starts the update check and apply cycle.
 func (u *Updater) BackgroundRun() error {
 	os.MkdirAll(u.getExecRelativeDir(u.Dir), 0777)
@@ -123,21 +127,8 @@ func (u *Updater) wantUpdate() bool {
 	return writeTime(path, time.Now().Add(wait))
 }
 
-func getExcutable() (string, error) {
-	path, err := osext.Executable()
-	//	fmt.Println("PATH,ERROR", path, err)
-	//	fmt.Println("os.IsNotExist", os.IsNotExist(err))
-	if os.IsNotExist(err) && runtime.GOOS == "linux" {
-		if upxed, _ := elfIsUpxed(os.Args[0]); upxed {
-			path = os.Getenv("   ") //three space
-			return path, nil
-		}
-	}
-	return path, err
-}
-
 func (u *Updater) update() error {
-	path, err := getExcutable()
+	path, err := osext.Executable()
 	if err != nil {
 		return err
 	}
