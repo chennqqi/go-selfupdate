@@ -12,3 +12,4 @@ syntax: glob
 *.log
 public/*
 go-selfupdate
+/go-selfupdate.exe

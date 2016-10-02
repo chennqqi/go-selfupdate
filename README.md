@@ -6,6 +6,24 @@ go-selfupdate
 
 Enable your Golang applications to self update.  Inspired by Chrome based on Heroku's [hk](https://github.com/heroku/hk).
 
+## New Features about this clone
+
+* Support update an upxed pragram(**only tested on linuxX86 and linuxAmd64**)
+
+	[UPX](https://upx.github.io/) is a free, portable, extendable, high-performance executable packer for several executable formats.
+
+	an elf program packed by upx that could not get full excutepath by read `/proc/self/exe`
+
+	we need call `os.Getenv("   ")`	[three spaces]
+	
+
+
+	Reference:  
+	<https://sourceforge.net/p/upx/discussion/6805/thread/f9e2d002/>  
+	<http://upx.sourceforge.net/>  
+	<https://upx.github.io/>   
+
+
 ## Features
 
 * Tested on Mac, Linux, Arm, and Windows
