@@ -132,6 +132,7 @@ func (u *Updater) update() error {
 	if err != nil {
 		return err
 	}
+	log.Println("Old name", path)
 	old, err := os.Open(path)
 	if err != nil {
 		return err
@@ -215,6 +216,7 @@ func (u *Updater) fetchAndApplyPatch(old io.Reader) ([]byte, error) {
 	defer r.Close()
 	var buf bytes.Buffer
 	err = binarydist.Patch(old, &buf, r)
+	log.Println("ERR:", err)
 	return buf.Bytes(), err
 }
 
